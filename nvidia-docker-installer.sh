@@ -5,7 +5,7 @@ set -o pipefail
 set -u
 
 set -x
-NVIDIA_DRIVER_VERSION="${NVIDIA_DRIVER_VERSION:-384.125}"
+NVIDIA_DRIVER_VERSION="${NVIDIA_DRIVER_VERSION:-396.26}"
 NVIDIA_DRIVER_DOWNLOAD_URL_DEFAULT="https://us.download.nvidia.com/tesla/${NVIDIA_DRIVER_VERSION}/NVIDIA-Linux-x86_64-${NVIDIA_DRIVER_VERSION}.run"
 NVIDIA_DRIVER_DOWNLOAD_URL="${NVIDIA_DRIVER_DOWNLOAD_URL:-$NVIDIA_DRIVER_DOWNLOAD_URL_DEFAULT}"
 NVIDIA_INSTALLER_RUNFILE="$(basename "${NVIDIA_DRIVER_DOWNLOAD_URL}")"
@@ -20,9 +20,10 @@ RETRY_COUNT=5
 
 download_kernel_src() {
   echo "Downloading kernel sources..."
-  apt-get update
-  apt-get install -y linux-headers-$(uname -r)
-  apt-get install -y gcc libc-dev
+  #apt-get update
+  #apt-get install -y linux-headers-$(uname -r)
+  #apt-get install -y gcc libc-dev
+  yum install -y gcc kernel-headers
   echo "Downloading kernel sources... DONE."
 }
 
@@ -63,11 +64,14 @@ verify_nvidia_installation() {
 }
 
 install_nvidia_docker2() {
-  curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | apt-key add -
+  #curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | apt-key add -
+  curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey >/tmp/nvidia-docker.gpgkey && rpm --import /tmp/nvidia-docker.gpgkey
   distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-  curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | tee /etc/apt/sources.list.d/nvidia-docker.list
-  apt-get update
-  apt-get install -y nvidia-docker2=2.0.3+docker17.03.2-1 nvidia-container-runtime=2.0.0+docker17.03.2-1
+  #curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | tee /etc/apt/sources.list.d/nvidia-docker.list
+  curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.repo | tee /etc/yum.repos.d/nvidia-docker.repo
+  #apt-get update
+  #apt-get install -y nvidia-docker2=2.0.3+docker17.03.2-1 nvidia-container-runtime=2.0.0+docker17.03.2-1
+  yum install -y nvidia-docker2-2.0.3-1.docker17.03.2.ce
 }
 
 set_nvidia_container_runtime() {
